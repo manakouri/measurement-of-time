@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en-NZ">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Solar Tribe: Science & Vocab Quiz</title>
+    <style>
+        :root { --space-blue: #0b1d33; --star-gold: #f1c40f; --text-light: #ecf0f1; }
+        body { font-family: 'Arial', sans-serif; background-color: var(--space-blue); color: var(--text-light); display: flex; justify-content: center; padding: 20px; line-height: 1.6; }
+        .container { max-width: 700px; width: 100%; background: rgba(255, 255, 255, 0.1); padding: 30px; border-radius: 15px; box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.5); backdrop-filter: blur(5px); }
+        h1, h2 { color: var(--star-gold); text-align: center; }
+        .hidden { display: none; }
+        .topic-select { margin: 10px 0; padding: 10px; background: rgba(255,255,255,0.05); border-radius: 5px; }
+        .btn { background-color: var(--star-gold); color: #000; border: none; padding: 15px 20px; border-radius: 5px; cursor: pointer; font-weight: bold; width: 100%; font-size: 1.1rem; margin-top: 20px; transition: 0.3s; }
+        .btn:hover { background-color: #d4ac0d; }
+        .option-btn { display: block; width: 100%; padding: 12px; margin: 10px 0; background: #34495e; color: white; border: 2px solid transparent; text-align: left; border-radius: 8px; cursor: pointer; font-size: 1rem; }
+        .option-btn:hover { border-color: var(--star-gold); background: #2c3e50; }
+        .feedback { margin-top: 15px; font-weight: bold; padding: 15px; border-radius: 5px; text-align: center; }
+        .correct { background-color: #27ae60; color: white; }
+        .wrong { background-color: #c0392b; color: white; }
+        .vocab-list { font-size: 0.9rem; background: #1a2a3a; padding: 15px; border-radius: 10px; margin-top: 30px; border: 1px solid var(--star-gold); }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>Solar Tribe Quiz</h1>
+
+    <div id="setup">
+        <p>Tick the topics we have covered in class:</p>
+        <div id="topic-list"></div>
+        <button class="btn" onclick="startQuiz()">Launch Mission</button>
+        
+        <div class="vocab-list">
+            <h3>Vocabulary Reference</h3>
+            <p><strong>Maintain:</strong> To keep something going at the same level.</p>
+            <p><strong>Predict:</strong> To say what will happen in the future based on evidence.</p>
+            <p><strong>Standardise:</strong> To make things consistent and the same for everyone.</p>
+            <p><strong>Synchronise:</strong> To make things happen at the exact same time.</p>
+        </div>
+    </div>
+
+    <div id="quiz" class="hidden">
+        <div style="text-align: right; font-size: 0.8rem;" id="progress"></div>
+        <h2 id="question-text"></h2>
+        <div id="options-container"></div>
+        <div id="feedback" class="feedback hidden"></div>
+        <button id="next-btn" class="btn hidden" onclick="loadQuestion()">Next Question</button>
+    </div>
+
+    <div id="results" class="hidden">
+        <h2>Mission Complete!</h2>
+        <p id="score-text" style="font-size: 1.5rem; text-align: center;"></p>
+        <button class="btn" onclick="location.reload()">Return to Base (Restart)</button>
+    </div>
+</div>
+
+<script>
+const questionBank = [
+    // TOPIC: Earth's Rotation (Week 1-2)
+    { topic: "Rotation & Velocity", q: "What is the definition of 'Velocity'?", a: ["Speed in a specific direction", "The internal line of a planet", "The weight of an object", "How long a day lasts"], correct: 0 },
+    { topic: "Rotation & Velocity", q: "Fill in the gap: The Earth must ______ a constant speed to keep us safe.", a: ["Predict", "Maintain", "Standardise", "Signify"], correct: 1 },
+    { topic: "Rotation & Velocity", q: "The imaginary line the Earth spins on is called the ______.", a: ["Orbit", "Axis", "Velocity", "Mechanism"], correct: 1 },
+
+    // TOPIC: Earth's Orbit (Week 3)
+    { topic: "Gravity & Orbits", q: "What word describes a 'regular oval shape' like Earth's path?", a: ["Circle", "Sphere", "Ellipse", "Interval"], correct: 2 },
+    { topic: "Gravity & Orbits", q: "The Sun's gravity ______ the Earth to keep it in orbit.", a: ["Signifies", "Aligns", "Attracts", "Standardises"], correct: 2 },
+
+    // TOPIC: Calendars (Week 4-5)
+    { topic: "Calendars & Time", q: "What does it mean to 'Predict' something?", a: ["To look at the past", "To keep something the same", "To say what will happen in the future", "To spin on an axis"], correct: 2 },
+    { topic: "Calendars & Time", q: "Pope Gregory XIII wanted to ______ the calendar so the seasons matched.", a: ["Maintain", "Align", "Signify", "Rotate"], correct: 1 },
+
+    // TOPIC: The Moon & Maramataka (Week 6)
+    { topic: "Lunar Cycles", q: "In the Maramataka, the Moon's phases ______ the best time for fishing.", a: ["Standardise", "Signify", "Synchronise", "Maintain"], correct: 1 },
+    { topic: "Lunar Cycles", q: "What word means 'the process of growing crops or plants'?", a: ["Observation", "Mechanism", "Cultivation", "Frequency"], correct: 2 },
+
+    // TOPIC: Mechanical Clocks (Week 7)
+    { topic: "Clocks & Watches", q: "Why did nations need to 'Standardise' time?", a: ["To make sure every town had the same time", "To make the Sun move faster", "To change the Earth's axis", "To stop the Moon's orbit"], correct: 0 },
+    { topic: "Clocks & Watches", q: "What is the high-speed vibration of a quartz crystal called?", a: ["Rotation", "Interval", "Frequency", "Gravity"], correct: 2 },
+    { topic: "Clocks & Watches", q: "A quartz watch uses a tiny ______ to count vibrations.", a: ["Pendulum", "Computer chip", "Spring", "Magnet"], correct: 1 },
+
+    // TOPIC: Digital Time & GPS (Week 8)
+    { topic: "Global Systems", q: "To 'Synchronise' means to:", a: ["Make things happen at the same time", "Measure how heavy an atom is", "Fly a satellite into space", "Draw an invisible line"], correct: 0 },
+    { topic: "Global Systems", q: "What do we call the 24 sections used to 'Coordinate' time globally?", a: ["Lunar Phases", "Time Zones", "Ellipses", "Mechanisms"], correct: 1 }
+];
+
+let selectedQuestions = [];
+let currentIndex = 0;
+let score = 0;
+
+const setupDiv = document.getElementById('topic-list');
+const topics = [...new Set(questionBank.map(item => item.topic))];
+topics.forEach(topic => {
+    setupDiv.innerHTML += `<div class="topic-select"><input type="checkbox" checked value="${topic}"> ${topic}</div>`;
+});
+
+function startQuiz() {
+    const checkedTopics = Array.from(document.querySelectorAll('input[type="checkbox"]:checked')).map(cb => cb.value);
+    selectedQuestions = questionBank.filter(q => checkedTopics.includes(q.topic));
+    if (selectedQuestions.length === 0) return alert("Please select at least one topic!");
+    selectedQuestions.sort(() => Math.random() - 0.5);
+    document.getElementById('setup').classList.add('hidden');
+    document.getElementById('quiz').classList.remove('hidden');
+    loadQuestion();
+}
+
+function loadQuestion() {
+    if (currentIndex >= selectedQuestions.length) return showResults();
+    const qData = selectedQuestions[currentIndex];
+    document.getElementById('progress').innerText = `Question ${currentIndex + 1} of ${selectedQuestions.length}`;
+    document.getElementById('question-text').innerText = qData.q;
+    document.getElementById('feedback').classList.add('hidden');
+    document.getElementById('next-btn').classList.add('hidden');
+    const optionsDiv = document.getElementById('options-container');
+    optionsDiv.innerHTML = "";
+    qData.a.forEach((opt, index) => {
+        const btn = document.createElement('button');
+        btn.className = 'option-btn';
+        btn.innerText = opt;
+        btn.onclick = () => checkAnswer(index);
+        optionsDiv.appendChild(btn);
+    });
+}
+
+function checkAnswer(choice) {
+    const qData = selectedQuestions[currentIndex];
+    const feedback = document.getElementById('feedback');
+    feedback.classList.remove('hidden');
+    const buttons = document.querySelectorAll('.option-btn');
+    buttons.forEach(b => b.disabled = true);
+    
+    if (choice === qData.correct) {
+        feedback.innerText = "Ka pai! Correct.";
+        feedback.className = "feedback correct";
+        score++;
+    } else {
+        feedback.innerText = "Not quite. The correct answer was: " + qData.a[qData.correct];
+        feedback.className = "feedback wrong";
+    }
+    document.getElementById('next-btn').classList.remove('hidden');
+    currentIndex++;
+}
+
+function showResults() {
+    document.getElementById('quiz').classList.add('hidden');
+    document.getElementById('results').classList.remove('hidden');
+    document.getElementById('score-text').innerText = `You scored ${score} out of ${selectedQuestions.length}!`;
+}
+</script>
+</body>
+</html>
